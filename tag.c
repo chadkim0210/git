@@ -15,7 +15,7 @@ static int run_gpg_verify(const char *buf, unsigned long size, unsigned flags)
 
 	memset(&sigc, 0, sizeof(sigc));
 
-	payload_size = parse_signature(buf, size);
+	payload_size = parse_signature(buf, size, NULL);
 
 	if (size == payload_size) {
 		if (flags & GPG_VERIFY_VERBOSE)

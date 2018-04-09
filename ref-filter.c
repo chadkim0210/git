@@ -1009,7 +1009,7 @@ static void find_subpos(const char *buf, unsigned long sz,
 		buf++;
 
 	/* parse signature first; we might not even have a subject line */
-	*sig = buf + parse_signature(buf, strlen(buf));
+	*sig = buf + parse_signature(buf, strlen(buf), NULL);
 	*siglen = strlen(*sig);
 
 	/* subject is first non-empty line */

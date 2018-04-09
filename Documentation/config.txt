@@ -1727,16 +1727,38 @@ grep.fallbackToNoIndex::
 	If set to true, fall back to git grep --no-index if git grep
 	is executed outside of a git repository.  Defaults to false.
 
-gpg.program::
-	Use this custom program instead of "`gpg`" found on `$PATH` when
-	making or verifying a PGP signature. The program must support the
-	same command-line interface as GPG, namely, to verify a detached
-	signature, "`gpg --verify $file - <$signature`" is run, and the
-	program is expected to signal a good signature by exiting with
-	code 0, and to generate an ASCII-armored detached signature, the
-	standard input of "`gpg -bsau $key`" is fed with the contents to be
+signingtool.<name>.program::
+	The name of the program on `$PATH` to execute when making or
+	verifying a signature. This program will be used for making
+	signatures if `<name>` is configured as `signingtool.default`.
+	This program will be used for verifying signatures whose PEM
+	block type matches `signingtool.<name>.pemtype` (see below). The
+	program must support the same command-line interface as GPG.
+	To verify a detached signature,
+	"`gpg --verify $file - <$signature`" is run, and the program is
+	expected to signal a good signature by exiting with code 0.
+	To generate an ASCII-armored detached signature, the standard
+	input of "`gpg -bsau $key`" is fed with the contents to be
 	signed, and the program is expected to send the result to its
-	standard output.
+	standard output. By default, `signingtool.gpg.program` is set to
+	`gpg`.
+
+signingtool.<name>.pemtype::
+	The PEM block type associated with the signing tool named
+	`<name>`. For example, the block type of a GPG signature
+	starting with `-----BEGIN PGP SIGNATURE-----` is `PGP
+	SIGNATURE`. When verifying a signature with this PEM block type
+	the program specified in `signingtool.<name>.program` will be
+	used. By default `signingtool.gpg.pemtype` contains `PGP
+	SIGNATURE` and `PGP MESSAGE`.
+
+signingtool.default::
+	The `<name>` of the signing tool to use when creating
+	signatures (e.g., setting it to "foo" will use use the program
+	specified by `signingtool.foo.program`). Defaults to `gpg`.
+
+gpg.program::
+	Historical alias for `signingtool.gpg.program`.
 
 gui.commitMsgWidth::
 	Defines how wide the commit message window is in the
