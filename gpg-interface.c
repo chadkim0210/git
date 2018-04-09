@@ -9,9 +9,6 @@
 static char *configured_signing_key;
 static const char *gpg_program = "gpg";
 
-#define PGP_SIGNATURE "-----BEGIN PGP SIGNATURE-----"
-#define PGP_MESSAGE "-----BEGIN PGP MESSAGE-----"
-
 void signature_check_clear(struct signature_check *sigc)
 {
 	FREE_AND_NULL(sigc->payload);
@@ -101,10 +98,17 @@ void print_signature_buffer(const struct signature_check *sigc, unsigned flags)
 		fputs(output, stderr);
 }
 
-static int is_gpg_start(const char *line)
+static int is_pem_start(const char *line)
 {
-	return starts_with(line, PGP_SIGNATURE) ||
-		starts_with(line, PGP_MESSAGE);
+	if (!skip_prefix(line, "-----BEGIN ", &line))
+		return 0;
+	if (!skip_prefix(line, "PGP SIGNATURE", &line) &&
+	    !skip_prefix(line, "PGP MESSAGE", &line))
+		return 0;
+	if (!starts_with(line, "-----"))
+		return 0;
+
+	return 1;
 }
 
 size_t parse_signature(const char *buf, size_t size)
@@ -114,7 +118,7 @@ size_t parse_signature(const char *buf, size_t size)
 	while (len < size) {
 		const char *eol;
 
-		if (is_gpg_start(buf + len))
+		if (is_pem_start(buf + len))
 			match = len;
 
 		eol = memchr(buf + len, '\n', size - len);
