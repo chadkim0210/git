@@ -280,6 +280,7 @@ static int git_reset_config(const char *var, const char *value, void *cb)
 int cmd_reset(int argc, const char **argv, const char *prefix)
 {
 	int reset_type = NONE, update_ref_status = 0, quiet = 0;
+	int show_new_head_line = 1;
 	int patch_mode = 0, unborn;
 	const char *rev;
 	struct object_id oid;
@@ -302,6 +303,7 @@ int cmd_reset(int argc, const char **argv, const char *prefix)
 		OPT_BOOL('p', "patch", &patch_mode, N_("select hunks interactively")),
 		OPT_BOOL('N', "intent-to-add", &intent_to_add,
 				N_("record only the fact that removed paths will be added later")),
+		OPT_HIDDEN_BOOL(0, "show-new-head-line", &show_new_head_line, N_("show information on the new HEAD")),
 		OPT_END()
 	};
 
@@ -395,7 +397,8 @@ int cmd_reset(int argc, const char **argv, const char *prefix)
 		 * switched to, saving the previous head in ORIG_HEAD before. */
 		update_ref_status = reset_refs(rev, &oid);
 
-		if (reset_type == HARD && !update_ref_status && !quiet)
+		if (reset_type == HARD && !update_ref_status && !quiet &&
+		    show_new_head_line)
 			print_new_head_line(lookup_commit_reference(&oid));
 	}
 	if (!pathspec.nr)

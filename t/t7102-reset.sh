@@ -568,4 +568,9 @@ test_expect_success 'reset --mixed sets up work tree' '
 	test_cmp expect actual
 '
 
+test_expect_success 'reset --no-show-new-head-line suppresses "HEAD is now at" output' '
+	git reset --hard --no-show-new-head-line HEAD >actual &&
+	! grep "HEAD is now at" <actual
+'
+
 test_done
