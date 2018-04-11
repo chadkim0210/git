@@ -464,6 +464,12 @@ all::
 # When using RUNTIME_PREFIX, define HAVE_WPGMPTR if your platform offers
 # the global variable _wpgmptr containing the absolute path of the current
 # executable (this is the case on Windows).
+#
+# Define DEVELOPER to enable more compiler warnings. Compiler version
+# and faimily are auto detected, but could be overridden by defining
+# COMPILER_FEATURES (see config.mak.dev).
+# Define EAGER_DEVELOPER keeps compiler warnings non-fatal, but no warning
+# class is suppressed anymore.
 
 GIT-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./GIT-VERSION-GEN
@@ -472,15 +478,6 @@ GIT-VERSION-FILE: FORCE
 # CFLAGS and LDFLAGS are for the users to override from the command line.
 
 CFLAGS = -g -O2 -Wall
-DEVELOPER_CFLAGS = -Werror \
-	-Wdeclaration-after-statement \
-	-Wno-format-zero-length \
-	-Wold-style-definition \
-	-Woverflow \
-	-Wpointer-arith \
-	-Wstrict-prototypes \
-	-Wunused \
-	-Wvla
 LDFLAGS =
 ALL_CFLAGS = $(CPPFLAGS) $(CFLAGS)
 ALL_LDFLAGS = $(LDFLAGS)
@@ -1095,8 +1092,11 @@ include config.mak.uname
 -include config.mak.autogen
 -include config.mak
 
+ifdef EAGER_DEVELOPER
+DEVELOPER = Yes
+endif
 ifdef DEVELOPER
-CFLAGS += $(DEVELOPER_CFLAGS)
+include config.mak.dev
 endif
 
 comma := ,
