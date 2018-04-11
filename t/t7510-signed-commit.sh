@@ -5,6 +5,10 @@ test_description='signed commit tests'
 GNUPGHOME_NOT_USED=$GNUPGHOME
 . "$TEST_DIRECTORY/lib-gpg.sh"
 
+test_expect_success 'create fake signing program' '
+	create_fake_signer
+'
+
 test_expect_success GPG 'create signed commits' '
 	test_when_finished "test_unconfig commit.gpgsign" &&
 
@@ -51,13 +55,33 @@ test_expect_success GPG 'create signed commits' '
 	# commit.gpgsign is still on but this must not be signed
 	git tag ninth-unsigned $(echo 9 | git commit-tree HEAD^{tree}) &&
 	# explicit -S of course must sign.
-	git tag tenth-signed $(echo 9 | git commit-tree -S HEAD^{tree})
+	git tag tenth-signed $(echo 9 | git commit-tree -S HEAD^{tree}) &&
+
+	git config signingtool.fake.program "$TRASH_DIRECTORY/fake-signer" &&
+	git config signingtool.fake.pemtype "FAKE SIGNER SIGNATURE" &&
+	echo 11 >file && test_tick && git commit -a -m eleventh &&
+	git tag eleventh-pgp-signed &&
+	git cat-file -p eleventh-pgp-signed >actual &&
+	grep "PGP SIGNATURE" actual &&
+
+	git config gpg.program "$TRASH_DIRECTORY/fake-signer" &&
+	echo 12 >file && test_tick && git commit -a -m twelfth && test_unconfig gpg.program &&
+	git tag twelfth-fake-signed &&
+	git cat-file -p twelfth-fake-signed >actual &&
+	grep "FAKE SIGNER SIGNATURE" actual &&
+
+	git config signingtool.default fake &&
+	echo 13 >file && test_tick && git commit -a -m thirteenth && test_unconfig signingtool.default &&
+	git tag thirteenth-fake-signed &&
+	git cat-file -p thirteenth-fake-signed >actual &&
+	grep "FAKE SIGNER SIGNATURE" actual
 '
 
 test_expect_success GPG 'verify and show signatures' '
 	(
 		for commit in initial second merge fourth-signed \
-			fifth-signed sixth-signed seventh-signed tenth-signed
+			fifth-signed sixth-signed seventh-signed tenth-signed \
+			eleventh-pgp-signed twelfth-fake-signed thirteenth-fake-signed
 		do
 			git verify-commit $commit &&
 			git show --pretty=short --show-signature $commit >actual &&
@@ -98,7 +122,9 @@ test_expect_success GPG 'verify-commit exits success on untrusted signature' '
 
 test_expect_success GPG 'verify signatures with --raw' '
 	(
-		for commit in initial second merge fourth-signed fifth-signed sixth-signed seventh-signed
+		for commit in initial second merge fourth-signed fifth-signed sixth-signed \
+			seventh-signed eleventh-pgp-signed twelfth-fake-signed \
+			thirteenth-fake-signed
 		do
 			git verify-commit --raw $commit 2>actual &&
 			grep "GOODSIG" actual &&

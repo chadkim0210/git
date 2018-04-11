@@ -490,14 +490,16 @@ static void fmt_merge_msg_sigs(struct strbuf *out)
 		unsigned long size, len;
 		char *buf = read_object_file(oid, &type, &size);
 		struct strbuf sig = STRBUF_INIT;
+		const struct signing_tool *tool;
 
 		if (!buf || type != OBJ_TAG)
 			goto next;
-		len = parse_signature(buf, size);
+		len = parse_signature(buf, size, &tool);
 
 		if (size == len)
 			; /* merely annotated */
-		else if (verify_signed_buffer(buf, len, buf + len, size - len, &sig, NULL)) {
+		else if (verify_signed_buffer(buf, len, buf + len, size - len,
+					      &sig, NULL, tool)) {
 			if (!sig.len)
 				strbuf_addstr(&sig, "gpg verification failed.\n");
 		}

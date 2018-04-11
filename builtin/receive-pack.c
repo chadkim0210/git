@@ -632,6 +632,7 @@ static void prepare_push_cert_sha1(struct child_process *proc)
 		struct strbuf gpg_output = STRBUF_INIT;
 		struct strbuf gpg_status = STRBUF_INIT;
 		int bogs /* beginning_of_gpg_sig */;
+		const struct signing_tool *tool;
 
 		already_done = 1;
 		if (write_object_file(push_cert.buf, push_cert.len, "blob",
@@ -641,10 +642,10 @@ static void prepare_push_cert_sha1(struct child_process *proc)
 		memset(&sigcheck, '\0', sizeof(sigcheck));
 		sigcheck.result = 'N';
 
-		bogs = parse_signature(push_cert.buf, push_cert.len);
+		bogs = parse_signature(push_cert.buf, push_cert.len, &tool);
 		if (verify_signed_buffer(push_cert.buf, bogs,
 					 push_cert.buf + bogs, push_cert.len - bogs,
-					 &gpg_output, &gpg_status) < 0) {
+					 &gpg_output, &gpg_status, tool) < 0) {
 			; /* error running gpg */
 		} else {
 			sigcheck.payload = push_cert.buf;
@@ -1566,7 +1567,7 @@ static void queue_commands_from_cert(struct command **tail,
 		die("malformed push certificate %.*s", 100, push_cert->buf);
 	else
 		boc += 2;
-	eoc = push_cert->buf + parse_signature(push_cert->buf, push_cert->len);
+	eoc = push_cert->buf + parse_signature(push_cert->buf, push_cert->len, NULL);
 
 	while (boc < eoc) {
 		const char *eol = memchr(boc, '\n', eoc - boc);

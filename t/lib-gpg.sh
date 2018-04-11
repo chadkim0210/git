@@ -56,3 +56,29 @@ sanitize_pgp() {
 		/^-----BEGIN PGP/ and $in_pgp = 1;
 	'
 }
+
+create_fake_signer () {
+	write_script fake-signer <<-\EOF
+	if [ "$1 $2" = "--status-fd=2 -bsau" ]; then
+		echo >&2 "[GNUPG:] BEGIN_SIGNING"
+		echo >&2 "[GNUPG:] SIG_CREATED D 1 SHA256 0 1513792449 4A7FF9E2330D22B19213A4E9E9C423BE17EFEE70"
+		# avoid "-" in echo arguments
+		printf "%s\n" \
+		  "-----BEGIN FAKE SIGNER SIGNATURE-----" \
+		  "fake-signature" \
+		  "-----END FAKE SIGNER SIGNATURE-----"
+		exit 0
+
+	elif [ "$1 $2 $3" = "--status-fd=1 --keyid-format=long --verify" ]; then
+		echo "[GNUPG:] NEWSIG"
+		echo "[GNUPG:] GOODSIG 4A7FF9E2330D22B19213A4E9E9C423BE17EFEE70 /CN=Some User/EMail=some@user.email"
+		echo "[GNUPG:] TRUST_FULLY 0 shell"
+		echo >&2 "Good signature from /CN=Some User/EMail=some@user.email"
+		exit 0
+
+	else
+		echo "bad arguments" 1>&2
+		exit 1
+	fi
+	EOF
+}

@@ -179,7 +179,7 @@ static void write_tag_body(int fd, const struct object_id *oid)
 		return;
 	}
 	sp += 2; /* skip the 2 LFs */
-	write_or_die(fd, sp, parse_signature(sp, buf + size - sp));
+	write_or_die(fd, sp, parse_signature(sp, buf + size - sp, NULL));
 
 	free(buf);
 }

@@ -1280,7 +1280,7 @@ static void handle_signed_tag(struct commit *parent, struct commit_extra_header 
 	buf = read_object_file(&desc->obj->oid, &type, &size);
 	if (!buf || type != OBJ_TAG)
 		goto free_return;
-	len = parse_signature(buf, size);
+	len = parse_signature(buf, size, NULL);
 	if (size == len)
 		goto free_return;
 	/*

@@ -456,7 +456,7 @@ static void show_signature(struct rev_info *opt, struct commit *commit)
 
 	status = verify_signed_buffer(payload.buf, payload.len,
 				      signature.buf, signature.len,
-				      &gpg_output, NULL);
+				      &gpg_output, NULL, NULL);
 	if (status && !gpg_output.len)
 		strbuf_addstr(&gpg_output, "No signature\n");
 
@@ -498,6 +498,7 @@ static void show_one_mergetag(struct commit *commit,
 	struct strbuf verify_message;
 	int status, nth;
 	size_t payload_size, gpg_message_offset;
+	const struct signing_tool *tool;
 
 	hash_object_file(extra->value, extra->len, type_name(OBJ_TAG), &oid);
 	tag = lookup_tag(&oid);
@@ -520,14 +521,14 @@ static void show_one_mergetag(struct commit *commit,
 			    "parent #%d, tagged '%s'\n", nth + 1, tag->tag);
 	gpg_message_offset = verify_message.len;
 
-	payload_size = parse_signature(extra->value, extra->len);
+	payload_size = parse_signature(extra->value, extra->len, &tool);
 	status = -1;
 	if (extra->len > payload_size) {
 		/* could have a good signature */
 		if (!verify_signed_buffer(extra->value, payload_size,
 					  extra->value + payload_size,
 					  extra->len - payload_size,
-					  &verify_message, NULL))
+					  &verify_message, NULL, tool))
 			status = 0; /* good */
 		else if (verify_message.len <= gpg_message_offset)
 			strbuf_addstr(&verify_message, "No signature\n");
